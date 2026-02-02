@@ -4,14 +4,55 @@ info:
   description: API for analyzing Figma designs against IBM Carbon Design System v11 tokens.
   version: 1.0.0
 servers:
-  - url: https://your-backend-url.com/api
-    description: Production Server (Replace with your hosted URL)
+  - url: https://eds-atlas.onrender.com/api
+    description: Production Server (Render)
 components:
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: x-api-key
+  schemas:
+    AnalyzeRequest:
+      type: object
+      properties:
+        figmaUrl:
+          type: string
+          description: The full URL to the Figma frame or file.
+          example: "https://www.figma.com/design/key/file?node-id=1:2"
+        context:
+          type: string
+          description: Optional context or "User Intent" to filter false positives.
+          example: "Check for Danger button style"
+      required:
+        - figmaUrl
+    AnalyzeResponse:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+          description: "URL of the rendered Figma frame image"
+        violations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Violation"
+        complianceScore:
+          type: integer
+        summary:
+          type: string
+    Violation:
+      type: object
+      properties:
+        type:
+          type: string
+        element:
+          type: string
+        current:
+          type: string
+        expected:
+          type: string
+        message:
+          type: string
 security:
   - ApiKeyAuth: []
 paths:
@@ -25,45 +66,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                figmaUrl:
-                  type: string
-                  description: The full URL to the Figma frame or file.
-                  example: "https://www.figma.com/design/key/file?node-id=1:2"
-                context:
-                  type: string
-                  description: Optional context or "User Intent" to filter false positives.
-                  example: "Check for Danger button style"
-              required:
-                - figmaUrl
+              $ref: "#/components/schemas/AnalyzeRequest"
       responses:
         "200":
           description: Analysis successful
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  violations:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        type:
-                          type: string
-                        element:
-                          type: string
-                        current:
-                          type: string
-                        expected:
-                          type: string
-                        message:
-                          type: string
-                  complianceScore:
-                    type: integer
-                  summary:
-                    type: string
+                $ref: "#/components/schemas/AnalyzeResponse"
         "400":
           description: Invalid Request or missing URL
         "500":
