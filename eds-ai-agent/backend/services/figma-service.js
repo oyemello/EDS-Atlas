@@ -250,7 +250,8 @@ async function analyzeFigmaFrame(figmaUrl) {
         imageUrl = await getFigmaImage(fileKey, nodeId);
       } catch (e) {
         console.error('⚠️  Could not get Figma image for node', nodeId, ':', e.message);
-        // imageUrl remains null, will use placeholder in UI
+        // Add a placeholder if image fetch fails, with error text
+        imageUrl = `https://placehold.co/600x400/161616/ffffff?text=Image+Error:+${encodeURIComponent(e.message)}`;
       }
     }
 
