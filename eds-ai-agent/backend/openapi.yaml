@@ -1,0 +1,70 @@
+openapi: 3.1.0
+info:
+  title: EDS Atlas API
+  description: API for analyzing Figma designs against IBM Carbon Design System v11 tokens.
+  version: 1.0.0
+servers:
+  - url: https://your-backend-url.com/api
+    description: Production Server (Replace with your hosted URL)
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+security:
+  - ApiKeyAuth: []
+paths:
+  /figma/analyze:
+    post:
+      operationId: analyzeFigmaDesign
+      summary: Analyze a Figma Frame URL for conformity to Carbon Design System.
+      description: Fetches design data from Figma, compares against Carbon v11 tokens, and returns a strict violation report.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                figmaUrl:
+                  type: string
+                  description: The full URL to the Figma frame or file.
+                  example: "https://www.figma.com/design/key/file?node-id=1:2"
+                context:
+                  type: string
+                  description: Optional context or "User Intent" to filter false positives.
+                  example: "Check for Danger button style"
+              required:
+                - figmaUrl
+      responses:
+        "200":
+          description: Analysis successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  violations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        element:
+                          type: string
+                        current:
+                          type: string
+                        expected:
+                          type: string
+                        message:
+                          type: string
+                  complianceScore:
+                    type: integer
+                  summary:
+                    type: string
+        "400":
+          description: Invalid Request or missing URL
+        "500":
+          description: Server Error (Rate limit or API failure)

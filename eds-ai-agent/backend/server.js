@@ -40,6 +40,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Security Middleware: API Key check (for Custom GPT safety)
+app.use((req, res, next) => {
+  // Allow health check and static assets without key
+  if (req.path === '/api/health' || req.method === 'OPTIONS') {
+    return next();
+  }
+
+  // If secured mode is enabled
+  const apiSecret = process.env.API_SECRET;
+  if (apiSecret) {
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey || apiKey !== apiSecret) {
+      console.warn(`Unauthorized access attempt from ${req.ip}`);
+      return res.status(401).json({ error: 'Unauthorized: Invalid or missing API Key' });
+    }
+  }
+  next();
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
