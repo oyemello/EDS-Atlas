@@ -1,0 +1,437 @@
+{
+  "Button": {
+    "description": "Buttons are used to trigger actions or events",
+    "variants": [
+      "primary",
+      "secondary",
+      "tertiary",
+      "danger",
+      "ghost"
+    ],
+    "sizes": [
+      "sm",
+      "md",
+      "lg",
+      "xl",
+      "2xl"
+    ],
+    "props": [
+      "kind",
+      "size",
+      "disabled",
+      "onClick",
+      "renderIcon",
+      "iconDescription",
+      "hasIconOnly",
+      "tooltipPosition",
+      "tooltipAlignment"
+    ],
+    "usage": "Use primary for main actions, secondary for less important actions, tertiary for subtle actions, danger for destructive actions, ghost for minimal emphasis",
+    "accessibility": "Always provide descriptive text or iconDescription for screen readers",
+    "carbonImport": "import { Button } from '@carbon/react';"
+  },
+  "TextInput": {
+    "description": "Text inputs enable users to enter free-form text data",
+    "variants": [
+      "default",
+      "password",
+      "fluid"
+    ],
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "props": [
+      "id",
+      "labelText",
+      "placeholder",
+      "invalid",
+      "invalidText",
+      "warn",
+      "warnText",
+      "helperText",
+      "disabled",
+      "readOnly",
+      "size",
+      "type"
+    ],
+    "usage": "Always include labelText for accessibility. Use helperText for additional context. Use invalidText for error states.",
+    "accessibility": "labelText is required for screen readers. Use aria-describedby for additional context.",
+    "carbonImport": "import { TextInput } from '@carbon/react';"
+  },
+  "Tile": {
+    "description": "Tiles are container components that group related content",
+    "variants": [
+      "default",
+      "clickable",
+      "selectable",
+      "expandable"
+    ],
+    "props": [
+      "light",
+      "onClick",
+      "selected",
+      "expanded",
+      "onExpand"
+    ],
+    "usage": "Use for cards, panels, containers. Clickable tiles are interactive. Selectable tiles can be toggled.",
+    "carbonImport": "import { Tile, ClickableTile, SelectableTile, ExpandableTile } from '@carbon/react';"
+  },
+  "Modal": {
+    "description": "Modals focus user attention on a specific task or piece of information",
+    "variants": [
+      "default",
+      "danger",
+      "passive"
+    ],
+    "sizes": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ],
+    "props": [
+      "open",
+      "onRequestClose",
+      "onRequestSubmit",
+      "modalHeading",
+      "modalLabel",
+      "primaryButtonText",
+      "secondaryButtonText",
+      "danger",
+      "size",
+      "preventCloseOnClickOutside"
+    ],
+    "usage": "Use for confirmations, forms, or important information. Always provide a way to close.",
+    "accessibility": "Focus is trapped within the modal. Escape key should close the modal.",
+    "carbonImport": "import { Modal } from '@carbon/react';"
+  },
+  "DataTable": {
+    "description": "Data tables display information in a grid of rows and columns",
+    "variants": [
+      "default",
+      "sortable",
+      "selectable",
+      "expandable",
+      "batch-actions"
+    ],
+    "props": [
+      "rows",
+      "headers",
+      "isSortable",
+      "sortRow",
+      "radio",
+      "batch"
+    ],
+    "usage": "Use for displaying tabular data. Enable sorting for comparing data. Use batch actions for multiple selections.",
+    "accessibility": "Use proper table headers and scope attributes. Provide sort state announcements.",
+    "carbonImport": "import { DataTable, Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@carbon/react';"
+  },
+  "Dropdown": {
+    "description": "Dropdowns present a list of options that users can select from",
+    "variants": [
+      "default",
+      "inline",
+      "fluid"
+    ],
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "props": [
+      "id",
+      "titleText",
+      "label",
+      "items",
+      "selectedItem",
+      "onChange",
+      "disabled",
+      "invalid",
+      "invalidText",
+      "warn",
+      "warnText"
+    ],
+    "usage": "Use for selecting a single option from a list. Use inline variant for compact layouts.",
+    "accessibility": "titleText is required for screen readers. Keyboard navigation is supported.",
+    "carbonImport": "import { Dropdown } from '@carbon/react';"
+  },
+  "Checkbox": {
+    "description": "Checkboxes allow users to select one or more options from a list",
+    "variants": [
+      "default",
+      "skeleton"
+    ],
+    "props": [
+      "id",
+      "labelText",
+      "checked",
+      "indeterminate",
+      "disabled",
+      "onChange",
+      "hideLabel"
+    ],
+    "usage": "Use for multiple selections. Use indeterminate state for parent checkboxes with mixed children.",
+    "accessibility": "labelText is required. Use fieldset and legend for checkbox groups.",
+    "carbonImport": "import { Checkbox } from '@carbon/react';"
+  },
+  "RadioButton": {
+    "description": "Radio buttons allow users to select exactly one option from a set",
+    "variants": [
+      "default",
+      "skeleton"
+    ],
+    "props": [
+      "id",
+      "labelText",
+      "value",
+      "checked",
+      "disabled",
+      "onChange"
+    ],
+    "usage": "Use when users can only select one option. Always use within RadioButtonGroup.",
+    "accessibility": "labelText is required. Use RadioButtonGroup for proper grouping.",
+    "carbonImport": "import { RadioButton, RadioButtonGroup } from '@carbon/react';"
+  },
+  "Toggle": {
+    "description": "Toggles are used to quickly switch between two possible states",
+    "variants": [
+      "default",
+      "small"
+    ],
+    "sizes": [
+      "sm",
+      "md"
+    ],
+    "props": [
+      "id",
+      "labelText",
+      "labelA",
+      "labelB",
+      "toggled",
+      "onToggle",
+      "disabled",
+      "size"
+    ],
+    "usage": "Use for on/off states. labelA is for off state, labelB is for on state.",
+    "accessibility": "labelText is required for screen readers.",
+    "carbonImport": "import { Toggle } from '@carbon/react';"
+  },
+  "Notification": {
+    "description": "Notifications communicate important information to users",
+    "variants": [
+      "toast",
+      "inline",
+      "actionable"
+    ],
+    "kinds": [
+      "error",
+      "info",
+      "info-square",
+      "success",
+      "warning",
+      "warning-alt"
+    ],
+    "props": [
+      "kind",
+      "title",
+      "subtitle",
+      "caption",
+      "onClose",
+      "onCloseButtonClick",
+      "lowContrast",
+      "hideCloseButton",
+      "role",
+      "statusIconDescription"
+    ],
+    "usage": "Use toast for transient messages. Use inline for contextual messages. Use actionable when user action is needed.",
+    "accessibility": "Use appropriate role attribute. Provide statusIconDescription for screen readers.",
+    "carbonImport": "import { ToastNotification, InlineNotification, ActionableNotification } from '@carbon/react';"
+  },
+  "Tabs": {
+    "description": "Tabs organize content into separate views where only one can be visible at a time",
+    "variants": [
+      "default",
+      "contained",
+      "vertical"
+    ],
+    "props": [
+      "selectedIndex",
+      "onChange",
+      "light",
+      "type"
+    ],
+    "usage": "Use for organizing related content. Keep tab labels short and descriptive.",
+    "accessibility": "Keyboard navigation is supported. Use arrow keys to move between tabs.",
+    "carbonImport": "import { Tabs, TabList, Tab, TabPanels, TabPanel } from '@carbon/react';"
+  },
+  "Accordion": {
+    "description": "Accordions deliver large amounts of content in a small space through progressive disclosure",
+    "variants": [
+      "default",
+      "flush"
+    ],
+    "props": [
+      "align",
+      "size",
+      "disabled"
+    ],
+    "usage": "Use for FAQ sections or when space is limited. Only one item should be open at a time in most cases.",
+    "accessibility": "Keyboard navigation is supported. Use Enter or Space to toggle.",
+    "carbonImport": "import { Accordion, AccordionItem } from '@carbon/react';"
+  },
+  "Tag": {
+    "description": "Tags are used for items that need to be labeled, categorized, or organized",
+    "variants": [
+      "read-only",
+      "dismissible",
+      "selectable",
+      "operational"
+    ],
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "types": [
+      "red",
+      "magenta",
+      "purple",
+      "blue",
+      "cyan",
+      "teal",
+      "green",
+      "gray",
+      "cool-gray",
+      "warm-gray",
+      "high-contrast",
+      "outline"
+    ],
+    "props": [
+      "type",
+      "size",
+      "filter",
+      "disabled",
+      "onClose"
+    ],
+    "usage": "Use for categorization, filtering, or status indicators. Use filter variant for filtering UI.",
+    "carbonImport": "import { Tag } from '@carbon/react';"
+  },
+  "Search": {
+    "description": "Search enables users to specify a word or phrase to find relevant content",
+    "variants": [
+      "default",
+      "expandable"
+    ],
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "props": [
+      "id",
+      "labelText",
+      "placeholder",
+      "value",
+      "onChange",
+      "onClear",
+      "size",
+      "disabled",
+      "closeButtonLabelText"
+    ],
+    "usage": "Use for filtering content or finding information. Provide clear placeholder text.",
+    "accessibility": "labelText is required for screen readers even if visually hidden.",
+    "carbonImport": "import { Search } from '@carbon/react';"
+  },
+  "Loading": {
+    "description": "Loading spinners indicate that a page or component is loading",
+    "variants": [
+      "default",
+      "small",
+      "overlay"
+    ],
+    "props": [
+      "active",
+      "withOverlay",
+      "small",
+      "description"
+    ],
+    "usage": "Use for async operations. Use overlay variant for full-page loading. Use small variant for inline loading.",
+    "accessibility": "description is required for screen readers.",
+    "carbonImport": "import { Loading } from '@carbon/react';"
+  },
+  "Form": {
+    "description": "Forms are used to collect user input",
+    "props": [
+      "onSubmit"
+    ],
+    "usage": "Use for data entry. Group related fields. Provide clear labels and validation feedback.",
+    "accessibility": "Use proper label associations. Provide error messages for invalid fields.",
+    "carbonImport": "import { Form, FormGroup, FormLabel } from '@carbon/react';"
+  },
+  "Grid": {
+    "description": "Grid provides a responsive layout system",
+    "variants": [
+      "default",
+      "narrow",
+      "condensed",
+      "full-width"
+    ],
+    "props": [
+      "narrow",
+      "condensed",
+      "fullWidth"
+    ],
+    "usage": "Use for page layout. Grid has 16 columns on large screens, 8 on medium, 4 on small.",
+    "carbonImport": "import { Grid, Column, Row } from '@carbon/react';"
+  },
+  "Link": {
+    "description": "Links are used for navigation or triggering actions",
+    "variants": [
+      "default",
+      "inline"
+    ],
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "props": [
+      "href",
+      "disabled",
+      "inline",
+      "visited",
+      "renderIcon",
+      "size"
+    ],
+    "usage": "Use for navigation between pages or sections. Use inline variant within text.",
+    "accessibility": "Link text should be descriptive. Avoid 'click here' or 'read more'.",
+    "carbonImport": "import { Link } from '@carbon/react';"
+  },
+  "Breadcrumb": {
+    "description": "Breadcrumbs show users their current location relative to the information architecture",
+    "props": [
+      "noTrailingSlash"
+    ],
+    "usage": "Use for multi-level navigation. Current page should not be a link.",
+    "accessibility": "Use nav element with aria-label='breadcrumb'.",
+    "carbonImport": "import { Breadcrumb, BreadcrumbItem } from '@carbon/react';"
+  },
+  "ProgressIndicator": {
+    "description": "Progress indicators guide users through multi-step processes",
+    "variants": [
+      "horizontal",
+      "vertical"
+    ],
+    "props": [
+      "currentIndex",
+      "vertical",
+      "spaceEqually",
+      "onChange"
+    ],
+    "usage": "Use for multi-step workflows. Keep step labels short and descriptive.",
+    "accessibility": "Current step is announced to screen readers.",
+    "carbonImport": "import { ProgressIndicator, ProgressStep } from '@carbon/react';"
+  }
+}

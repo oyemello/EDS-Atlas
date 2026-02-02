@@ -1,0 +1,356 @@
+// Import Carbon styles
+// Disable Carbon's @font-face generation to avoid Turbopack ~ alias issues
+// IBM Plex fonts are loaded from Google Fonts (see line 12)
+@use '@carbon/react' with (
+  $use-flexbox-grid: true,
+  $css--font-face: false
+);
+
+// IBM Plex fonts
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+// Root styles
+:root {
+  --font-ibm-plex: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-ibm-plex-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+  // Carbon color tokens
+  --cds-interactive-01: #0f62fe;
+  --cds-interactive-02: #393939;
+  --cds-danger-01: #da1e28;
+  --cds-support-success: #198038;
+  --cds-support-warning: #f1c21b;
+
+  --cds-text-primary: #161616;
+  --cds-text-secondary: #525252;
+  --cds-text-on-color: #ffffff;
+
+  --cds-background: #ffffff;
+  --cds-layer-01: #f4f4f4;
+  --cds-layer-02: #ffffff;
+
+  --cds-border-subtle: #e0e0e0;
+}
+
+// Dark mode
+[data-theme='dark'] {
+  --cds-text-primary: #f4f4f4;
+  --cds-text-secondary: #c6c6c6;
+  --cds-background: #161616;
+  --cds-layer-01: #262626;
+  --cds-layer-02: #393939;
+  --cds-border-subtle: #393939;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--font-ibm-plex);
+  background: var(--cds-background);
+  color: var(--cds-text-primary);
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cds-layer-01);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cds-border-subtle);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+// EDS Atlas specific styles
+.eds-container {
+  max-width: 1584px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.eds-header {
+  height: 48px;
+  background: #161616;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.eds-logo {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eds-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 32px;
+}
+
+.eds-nav-link {
+  color: #c6c6c6;
+  text-decoration: none;
+  padding: 14px 16px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  &.active {
+    color: #ffffff;
+    border-bottom: 2px solid #0f62fe;
+  }
+}
+
+// Main content
+.eds-main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 48px; // Account for Carbon Header height
+}
+
+// Card styles
+.eds-card {
+  background: var(--cds-layer-02);
+  border: 1px solid var(--cds-border-subtle);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+// Violation severity colors
+.severity-error {
+  color: #da1e28;
+  background: #fff1f1;
+  border-color: #da1e28;
+}
+
+.severity-warning {
+  color: #f1c21b;
+  background: #fdf6dd;
+  border-color: #f1c21b;
+}
+
+.severity-info {
+  color: #0f62fe;
+  background: #edf5ff;
+  border-color: #0f62fe;
+}
+
+// Monaco editor overrides
+.monaco-editor {
+  .margin-view-overlays .line-numbers {
+    color: #6f6f6f;
+  }
+}
+
+// Split pane styles
+.split-pane {
+  display: flex;
+  height: 100%;
+
+  .pane {
+    overflow: auto;
+  }
+
+  .resizer {
+    width: 4px;
+    background: var(--cds-border-subtle);
+    cursor: col-resize;
+
+    &:hover {
+      background: #0f62fe;
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+// Loading skeleton
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--cds-layer-01) 25%,
+    var(--cds-layer-02) 50%,
+    var(--cds-layer-01) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Compliance score colors
+.compliance-excellent {
+  color: #198038;
+}
+
+.compliance-good {
+  color: #0f62fe;
+}
+
+.compliance-needs-work {
+  color: #f1c21b;
+}
+
+.compliance-poor {
+  color: #da1e28;
+}
+
+// Chat interface styles
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 320px; // Add space for sticky input at bottom
+  scrollbar-width: none; // hide Firefox scrollbar
+}
+
+.chat-messages::-webkit-scrollbar {
+  display: none; // hide WebKit scrollbar
+}
+
+.chat-message {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  max-width: 80%;
+
+  &.user {
+    background: #0f62fe;
+    color: #ffffff;
+    margin-left: auto;
+    width: fit-content;
+  }
+
+  &.assistant {
+    background: var(--cds-layer-01);
+    color: var(--cds-text-primary);
+    width: fit-content;
+  }
+}
+
+.chat-input-container {
+  padding: 16px;
+  background: var(--cds-layer-01);
+  border-top: 1px solid var(--cds-border-subtle);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+// Code block styles
+pre {
+  background: #262626;
+  color: #f4f4f4;
+  padding: 16px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+code {
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 13px;
+}
+
+// Responsive styles
+@media (max-width: 1055px) {
+  .split-pane {
+    flex-direction: column;
+
+    .resizer {
+      width: 100%;
+      height: 4px;
+      cursor: row-resize;
+    }
+  }
+}
+
+@media (max-width: 671px) {
+  .eds-nav {
+    display: none;
+  }
+}

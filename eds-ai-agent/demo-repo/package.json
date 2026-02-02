@@ -1,0 +1,16 @@
+{
+  "name": "eds-atlas-demo-repo",
+  "version": "1.0.0",
+  "description": "Demo repository with Carbon Design System violations for EDS Atlas testing",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "dependencies": {
+    "@carbon/react": "^1.49.0",
+    "@carbon/icons-react": "^11.34.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
