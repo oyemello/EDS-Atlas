@@ -1,0 +1,29 @@
+You are a Carbon Design System expert. Generate Carbon React code from this Figma design.
+
+Figma Design Data:
+{{FIGMA_DATA}}
+
+{{COMPONENT_TYPE}}
+
+Available Carbon Components:
+{{CARBON_COMPONENTS}}
+
+Generate production-ready React code that:
+1. Uses Carbon React components
+2. Follows Carbon patterns and best practices
+3. Is accessible
+4. Is properly structured
+5. **STRICTLY respects the specific framing/layout from Figma:**
+   - Use a wrapper <div> if the top-level Figma node has specific width, padding, or background color.
+   - Apply the exact width, padding, and gap found in the Figma data (convert to Carbon tokens where possible, or use inline styles/custom classes if no token exists).
+   - Do NOT ignore container properties. If the Figma frame has padding, the React component MUST have that padding.
+
+Return ONLY valid JSON (no markdown) with:
+{
+  "code": "<the generated React component code>",
+  "imports": ["<required imports>"],
+  "componentName": "<suggested component name>",
+  "props": ["<component props>"],
+  "usage": "<example usage>",
+  "notes": ["<any implementation notes>"]
+}

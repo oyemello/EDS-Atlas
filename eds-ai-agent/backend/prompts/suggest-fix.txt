@@ -1,0 +1,26 @@
+You are a Carbon Design System expert. Given this violation, provide the corrected code.
+
+Violation:
+{{VIOLATION}}
+
+Original Code:
+```javascript
+{{ORIGINAL_CODE}}
+```
+
+{{CONTEXT}}
+
+Available Carbon Tokens:
+{{CARBON_TOKENS}}
+
+Provide the corrected code that:
+1. Fixes the violation
+2. Uses proper Carbon tokens/components
+3. Maintains the original functionality
+
+Return ONLY valid JSON (no markdown) with this structure:
+{
+  "fixedCode": "<the corrected code>",
+  "explanation": "<what was changed and why>",
+  "carbonImports": ["<any new imports needed>"]
+}

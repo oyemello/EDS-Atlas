@@ -48,67 +48,14 @@ async function withRetry(fn, maxRetries = 3, baseDelay = 1000) {
     throw lastError;
 }
 
-// System prompt for code analysis
-const CODE_ANALYSIS_PROMPT = `You are an expert in IBM Carbon Design System compliance. Your task is to analyze React/JavaScript code for Carbon Design System violations.
+// Load prompts
+const loadPrompt = (filename) => fs.readFileSync(path.join(__dirname, `../prompts/${filename}`), 'utf-8');
 
-## Carbon Design System Tokens
-${JSON.stringify(carbonTokens, null, 2)}
+const CODE_ANALYSIS_PROMPT = loadPrompt('code-analysis.txt')
+    .replace('{{CARBON_TOKENS}}', JSON.stringify(carbonTokens, null, 2))
+    .replace('{{CARBON_COMPONENTS}}', JSON.stringify(Object.keys(carbonComponents), null, 2));
 
-## Available Carbon Components
-${JSON.stringify(Object.keys(carbonComponents), null, 2)}
-
-## What to Check For:
-1. **Hardcoded Colors**: Any color values like #hex, rgb(), rgba(), hsl() that should use Carbon tokens
-2. **Hardcoded Spacing**: Values like '16px', '24px' that should use Carbon spacing tokens
-3. **Custom Components**: Custom buttons, inputs, modals that should use Carbon components
-4. **Typography Issues**: Custom font sizes/weights that should use Carbon typography tokens
-5. **Accessibility Issues**: Missing labels, ARIA attributes, improper semantics
-6. **Inline Styles**: Excessive inline styles that should be replaced with Carbon styling
-
-## Response Format
-Return a valid JSON object (no markdown, no code blocks) with this structure:
-{
-  "violations": [
-    {
-      "line": <line number>,
-      "column": <column number>,
-      "type": "<violation-type>",
-      "severity": "error" | "warning" | "info",
-      "message": "<human-readable description>",
-      "code": "<the actual violating code snippet>",
-      "suggestedFix": "<suggested Carbon-compliant code>",
-      "carbonToken": "<the Carbon token that should be used, if applicable>",
-      "carbonComponent": "<the Carbon component that should be used, if applicable>",
-      "documentation": "<link to relevant Carbon documentation>"
-    }
-  ],
-  "complianceScore": <0-100>,
-  "summary": "<brief summary of findings>",
-  "positives": ["<things done correctly>"]
-}
-
-## Violation Types:
-- hardcoded-color
-- hardcoded-spacing
-- custom-component
-- typography-violation
-- accessibility-violation
-- inline-style
-- missing-carbon-import
-- improper-component-usage
-
-## Severity Guidelines:
-- error: Direct violation of Carbon guidelines (hardcoded colors, custom components replacing Carbon ones)
-- warning: Potential issues or improvements (spacing inconsistencies, missing optimizations)
-- info: Suggestions for better practices
-
-Analyze the code thoroughly and provide actionable feedback.`;
-
-// General chat prompt
-const GENERAL_CHAT_PROMPT = `You are EDS Atlas, a concise, helpful AI for UI engineering and IBM Carbon Design System best practices. 
-- Answer naturally like ChatGPT.
-- When questions involve Carbon, accessibility, React, or design-to-code workflows, give practical, stepwise guidance.
-- If information is missing, ask clarifying questions briefly or state assumptions.`;
+const GENERAL_CHAT_PROMPT = loadPrompt('general-chat.txt');
 
 /**
  * Analyze code for Carbon Design System violations
@@ -154,32 +101,12 @@ async function suggestFix(violation, originalCode, context = '') {
         return generateMockFix(violation, originalCode);
     }
 
-    const prompt = `You are a Carbon Design System expert. Given this violation, provide the corrected code.
-
-Violation:
-${JSON.stringify(violation, null, 2)}
-
-Original Code:
-\`\`\`javascript
-${originalCode}
-\`\`\`
-
-${context ? `Additional Context:\n${context}\n` : ''}
-
-Available Carbon Tokens:
-${JSON.stringify(carbonTokens, null, 2)}
-
-Provide the corrected code that:
-1. Fixes the violation
-2. Uses proper Carbon tokens/components
-3. Maintains the original functionality
-
-Return ONLY valid JSON (no markdown) with this structure:
-{
-  "fixedCode": "<the corrected code>",
-  "explanation": "<what was changed and why>",
-  "carbonImports": ["<any new imports needed>"]
-}`;
+    const promptTemplate = loadPrompt('suggest-fix.txt');
+    const prompt = promptTemplate
+        .replace('{{VIOLATION}}', JSON.stringify(violation, null, 2))
+        .replace('{{ORIGINAL_CODE}}', originalCode)
+        .replace('{{CONTEXT}}', context ? `Additional Context:\n${context}\n` : '')
+        .replace('{{CARBON_TOKENS}}', JSON.stringify(carbonTokens, null, 2));
 
     try {
         const response = await withRetry(async () => {
@@ -215,10 +142,7 @@ async function analyzeFigmaDesign(figmaData) {
         return generateMockFigmaAnalysis(figmaData);
     }
 
-    // Read prompt from file
-    const promptTemplate = fs.readFileSync(path.join(__dirname, '../prompts/figma-analysis.txt'), 'utf-8');
-
-    // Interpolate data
+    const promptTemplate = loadPrompt('figma-analysis.txt');
     const prompt = promptTemplate
         .replace('{{FIGMA_DATA}}', JSON.stringify(figmaData, null, 2))
         .replace('{{CARBON_TOKENS}}', JSON.stringify(carbonTokens, null, 2));
@@ -253,31 +177,11 @@ async function generateCodeFromFigma(figmaData, componentType = null) {
         return generateMockCodeFromFigma(figmaData, componentType);
     }
 
-    const prompt = `You are a Carbon Design System expert. Generate Carbon React code from this Figma design.
-
-Figma Design Data:
-${JSON.stringify(figmaData, null, 2)}
-
-${componentType ? `Detected Component Type: ${componentType}` : ''}
-
-Available Carbon Components:
-${JSON.stringify(carbonComponents, null, 2)}
-
-Generate production-ready React code that:
-1. Uses Carbon React components
-2. Follows Carbon patterns and best practices
-3. Is accessible
-4. Is properly structured
-
-Return ONLY valid JSON (no markdown) with:
-{
-  "code": "<the generated React component code>",
-  "imports": ["<required imports>"],
-  "componentName": "<suggested component name>",
-  "props": ["<component props>"],
-  "usage": "<example usage>",
-  "notes": ["<any implementation notes>"]
-}`;
+    const promptTemplate = loadPrompt('generate-code.txt');
+    const prompt = promptTemplate
+        .replace('{{FIGMA_DATA}}', JSON.stringify(figmaData, null, 2))
+        .replace('{{COMPONENT_TYPE}}', componentType ? `Detected Component Type: ${componentType}` : '')
+        .replace('{{CARBON_COMPONENTS}}', JSON.stringify(carbonComponents, null, 2));
 
     try {
         const response = await withRetry(async () => {
@@ -309,45 +213,12 @@ async function compareFigmaToCode(figmaData, code, fileName = 'component.jsx') {
         return generateMockDriftAnalysis(figmaData, code);
     }
 
-    const prompt = `You are a Carbon Design System expert. Compare this Figma design to its code implementation and detect any drift.
-
-Figma Design:
-${JSON.stringify(figmaData, null, 2)}
-
-Code Implementation (${fileName}):
-\`\`\`javascript
-${code}
-\`\`\`
-
-Carbon Design Tokens:
-${JSON.stringify(carbonTokens, null, 2)}
-
-Identify:
-1. Color drift (design colors vs implementation colors)
-2. Spacing drift (design spacing vs implementation spacing)
-3. Typography drift
-4. Component structure drift
-5. Missing elements
-6. Extra elements not in design
-
-Return ONLY valid JSON (no markdown) with:
-{
-  "driftItems": [
-    {
-      "type": "color-drift" | "spacing-drift" | "typography-drift" | "structure-drift" | "missing-element" | "extra-element",
-      "severity": "critical" | "major" | "minor",
-      "designValue": "<value in Figma>",
-      "codeValue": "<value in code>",
-      "element": "<element description>",
-      "message": "<human-readable description>",
-      "suggestedFix": "<how to align code with design>"
-    }
-  ],
-  "alignmentScore": <0-100>,
-  "summary": "<brief summary of drift>",
-  "criticalDrift": <count>,
-  "minorDrift": <count>
-}`;
+    const promptTemplate = loadPrompt('drift-analysis.txt');
+    const prompt = promptTemplate
+        .replace('{{FIGMA_DATA}}', JSON.stringify(figmaData, null, 2))
+        .replace('{{FILE_NAME}}', fileName)
+        .replace('{{CODE}}', code)
+        .replace('{{CARBON_TOKENS}}', JSON.stringify(carbonTokens, null, 2));
 
     try {
         const response = await withRetry(async () => {

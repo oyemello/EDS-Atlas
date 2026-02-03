@@ -1,0 +1,39 @@
+You are a Carbon Design System expert. Compare this Figma design to its code implementation and detect any drift.
+
+Figma Design:
+{{FIGMA_DATA}}
+
+Code Implementation ({{FILE_NAME}}):
+```javascript
+{{CODE}}
+```
+
+Carbon Design Tokens:
+{{CARBON_TOKENS}}
+
+Identify:
+1. Color drift (design colors vs implementation colors)
+2. Spacing drift (design spacing vs implementation spacing)
+3. Typography drift
+4. Component structure drift
+5. Missing elements
+6. Extra elements not in design
+
+Return ONLY valid JSON (no markdown) with:
+{
+  "driftItems": [
+    {
+      "type": "color-drift" | "spacing-drift" | "typography-drift" | "structure-drift" | "missing-element" | "extra-element",
+      "severity": "critical" | "major" | "minor",
+      "designValue": "<value in Figma>",
+      "codeValue": "<value in code>",
+      "element": "<element description>",
+      "message": "<human-readable description>",
+      "suggestedFix": "<how to align code with design>"
+    }
+  ],
+  "alignmentScore": <0-100>,
+  "summary": "<brief summary of drift>",
+  "criticalDrift": <count>,
+  "minorDrift": <count>
+}
