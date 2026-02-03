@@ -1,4 +1,68 @@
 import { analyzeFigmaDesign, generateCodeFromFigma, compareFigmaToCode } from './openai-service.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load Carbon tokens
+const carbonTokens = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '../data/carbon-tokens.json'), 'utf-8')
+);
+
+// Helper to flatten tokens for O(1) lookup
+function flattenTokens(tokenObject, prefix = '') {
+  let flattened = {};
+  for (const key in tokenObject) {
+    const value = tokenObject[key];
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (typeof value === 'object' && value !== null && !value.fontSize && !value.value) { // Assuming typography tokens have fontSize, or skip if structure differs
+      // Basic check for leaf node vs nested object
+      // However, Carbon tokens structure in json: "color": { "blue-10": "#..." }
+      // Typography: "body-01": { fontSize... }
+      // Spacing: "spacing-01": "2px"
+      if (Object.keys(value).some(k => typeof value[k] === 'object' && !value.fontSize)) {
+        Object.assign(flattened, flattenTokens(value, newKey));
+      } else {
+        flattened[newKey] = value;
+      }
+    } else {
+      flattened[newKey] = value;
+    }
+  }
+  return flattened;
+}
+
+// Pre-process tokens for validation
+const colorsToTokenMap = {};
+const spacingToTokenMap = {};
+const typographyToTokenMap = {};
+
+// Build Maps
+Object.entries(carbonTokens.color || {}).forEach(([token, value]) => {
+  if (typeof value === 'string') {
+    colorsToTokenMap[value.toLowerCase()] = token;
+    // Handle rgba/rgb logic if needed, but for now exact hex match
+  }
+});
+
+Object.entries(carbonTokens.spacing || {}).forEach(([token, value]) => {
+  // value is like "2px" or "0.125rem"
+  spacingToTokenMap[value] = token;
+  // Also store pixel number if possible for comparison? 
+  // Let's rely on string match for now, or convert rem to px (16px base)
+  if (value.endsWith('rem')) {
+    const checkPx = parseFloat(value) * 16 + 'px';
+    spacingToTokenMap[checkPx] = token;
+  }
+});
+
+// Typography is more complex, exact match on object properties
+Object.entries(carbonTokens.typography || {}).forEach(([token, value]) => {
+  typographyToTokenMap[token] = value;
+});
+
 
 // Figma API base URL
 const FIGMA_API_BASE = 'https://api.figma.com/v1';
@@ -110,47 +174,46 @@ async function getFigmaImage(fileKey, nodeId, options = {}) {
  * Extract design data from Figma node for analysis
  * Optimized to reduce token usage by stripping unnecessary vector data
  */
-function extractDesignData(node, styles = {}, depth = 0) {
-  // Stop recursion at depth 3 to prevent massive payloads (30k+ tokens)
-  if (depth > 3) return { type: node.type, name: node.name, note: 'Depth limit reached' };
+/**
+ * Extract design data from Figma node for analysis
+ * STRICT MODE: No depth limits, capture all details.
+ */
+function extractDesignData(node, depth = 0) {
+  // Relaxed depth limit for stricter analysis (was 3)
+  if (depth > 20) return { type: node.type, name: node.name, note: 'Depth limit reached (20)' };
 
   // Skip vector nodes' children as they are just path data usually
-  const skipChildren = ['VECTOR', 'BOOLEAN_OPERATION', 'STAR', 'LINE', 'ELLIPSE', 'REGULAR_POLYGON', 'RECTANGLE'];
+  const skipChildren = ['VECTOR', 'BOOLEAN_OPERATION', 'STAR', 'LINE', 'ELLIPSE', 'REGULAR_POLYGON'];
 
   const data = {
+    id: node.id,
     name: node.name,
     type: node.type,
-    // Round dimensions to save chars
-    width: Math.round(node.absoluteBoundingBox?.width || 0),
-    height: Math.round(node.absoluteBoundingBox?.height || 0),
-    colors: [],
-    typography: [],
-    spacing: [],
+    // Keep exact dimensions for validation
+    width: node.absoluteBoundingBox?.width || 0,
+    height: node.absoluteBoundingBox?.height || 0,
+    roundedWidth: Math.round(node.absoluteBoundingBox?.width || 0),
+    roundedHeight: Math.round(node.absoluteBoundingBox?.height || 0),
+    fills: [],
+    connectorFills: [], // For strokes etc
+    typography: null,
+    spacing: {},
     children: []
   };
 
-  // Extract fills (colors) - Limit to 3 distinct colors per node to save tokens
+  // Extract fills (colors) - Capture ALL
   if (node.fills && Array.isArray(node.fills)) {
-    let colorCount = 0;
     node.fills.forEach(fill => {
-      if (colorCount >= 3) return;
       if (fill.type === 'SOLID' && fill.color && fill.visible !== false) {
         const { r, g, b, a = 1 } = fill.color;
         const hex = rgbToHex(r, g, b);
 
-        // Check if this fill uses a style
-        let tokenName = null;
-        if (node.styles && node.styles.fill && styles[node.styles.fill]) {
-          tokenName = styles[node.styles.fill].name;
-        }
-
-        data.colors.push({
+        data.fills.push({
           hex,
           opacity: Number((fill.opacity || a).toFixed(2)),
           type: 'fill',
-          tokenName: tokenName // Pass the detected token name to AI
+          visible: true
         });
-        colorCount++;
       }
     });
   }
@@ -161,7 +224,7 @@ function extractDesignData(node, styles = {}, depth = 0) {
       if (stroke.type === 'SOLID' && stroke.color && stroke.visible !== false) {
         const { r, g, b, a = 1 } = stroke.color;
         const hex = rgbToHex(r, g, b);
-        data.colors.push({
+        data.connectorFills.push({
           hex,
           type: 'stroke',
           weight: node.strokeWeight
@@ -172,29 +235,33 @@ function extractDesignData(node, styles = {}, depth = 0) {
 
   // Extract typography
   if (node.type === 'TEXT' && node.style) {
-    data.typography.push({
-      font: node.style.fontFamily,
-      size: node.style.fontSize,
-      weight: node.style.fontWeight,
-      height: node.style.lineHeightPx,
-      case: node.style.textCase
-    });
+    data.typography = {
+      fontFamily: node.style.fontFamily,
+      fontSize: node.style.fontSize,
+      fontWeight: node.style.fontWeight,
+      lineHeightPx: node.style.lineHeightPx,
+      lineHeightUnit: node.style.lineHeightUnit, // PIXELS, PERCENT, AUTO
+      letterSpacing: node.style.letterSpacing,
+      textCase: node.style.textCase
+    };
   }
 
   // Extract spacing (padding/gaps)
-  if (node.paddingLeft) {
-    data.spacing.push({
-      type: 'padding',
-      vals: [node.paddingTop, node.paddingRight, node.paddingBottom, node.paddingLeft]
-    });
+  if (node.paddingLeft || node.paddingTop || node.paddingRight || node.paddingBottom) {
+    data.spacing.padding = {
+      top: node.paddingTop || 0,
+      right: node.paddingRight || 0,
+      bottom: node.paddingBottom || 0,
+      left: node.paddingLeft || 0
+    };
   }
 
   if (node.itemSpacing) {
-    data.spacing.push({ type: 'gap', val: node.itemSpacing });
+    data.spacing.gap = node.itemSpacing;
   }
 
   if (node.cornerRadius) {
-    data.radius = node.cornerRadius;
+    data.radius = node.cornerRadius; // Could be mixed, but taking single for now
   }
 
   // Process children recursively
@@ -205,6 +272,112 @@ function extractDesignData(node, styles = {}, depth = 0) {
   }
 
   return data;
+}
+
+/**
+ * Validate design data against Carbon tokens strictly
+ */
+function validateDesignAgainstTokens(node, violations = []) {
+  const nodeName = node.name || 'Unknown Node';
+
+  // 1. Validate Fills
+  node.fills?.forEach(fill => {
+    const token = colorsToTokenMap[fill.hex.toLowerCase()];
+    if (!token) {
+      violations.push({
+        type: 'strict-color-mismatch',
+        severity: 'error',
+        element: `Fill in "${nodeName}"`,
+        current: fill.hex,
+        message: `Color ${fill.hex} is not a valid Carbon token.`,
+        carbonToken: 'Unknown'
+      });
+    }
+  });
+
+  // 2. Validate Strokes (Connector Fills)
+  node.connectorFills?.forEach(stroke => {
+    const token = colorsToTokenMap[stroke.hex.toLowerCase()];
+    if (!token) {
+      violations.push({
+        type: 'strict-color-mismatch',
+        severity: 'error',
+        element: `Stroke in "${nodeName}"`,
+        current: stroke.hex,
+        message: `Stroke color ${stroke.hex} is not a valid Carbon token.`,
+        carbonToken: 'Unknown'
+      });
+    }
+  });
+
+  // 3. Validate Spacing
+  if (node.spacing?.padding) {
+    Object.entries(node.spacing.padding).forEach(([side, value]) => {
+      if (value === 0) return; // 0 is usually allowed, or handled by layout
+      const valPx = `${value}px`;
+      const token = spacingToTokenMap[valPx];
+      if (!token) {
+        violations.push({
+          type: 'strict-spacing-mismatch',
+          severity: 'error',
+          element: `Padding-${side} in "${nodeName}"`,
+          current: valPx,
+          message: `Padding ${valPx} is not a valid Carbon spacing token.`,
+          carbonToken: 'Closest valid token?'
+        });
+      }
+    });
+  }
+  if (node.spacing?.gap) {
+    const valPx = `${node.spacing.gap}px`;
+    const token = spacingToTokenMap[valPx];
+    if (!token) {
+      violations.push({
+        type: 'strict-spacing-mismatch',
+        severity: 'error',
+        element: `Gap in "${nodeName}"`,
+        current: valPx,
+        message: `Gap ${valPx} is not a valid Carbon spacing token.`,
+        carbonToken: 'Unknown'
+      });
+    }
+  }
+
+  // 4. Validate Typography
+  if (node.typography) {
+    // Find best match or exact match
+    let match = null;
+    const currentFont = node.typography;
+
+    // This is a simplified check. A robust one would check all props.
+    // For now, let's checking if the combination of size + weight exists in any token
+    const foundToken = Object.entries(typographyToTokenMap).find(([name, token]) => {
+      // Basic fuzzy match on size (rem vs px)
+      // Carbon tokens use rem strings.
+      const tokenSizeRem = parseFloat(token.fontSize);
+      const currentSizePx = currentFont.fontSize;
+      const tokenSizePx = tokenSizeRem * 16;
+
+      return Math.abs(tokenSizePx - currentSizePx) < 0.5 &&
+        token.fontWeight == currentFont.fontWeight;
+    });
+
+    if (!foundToken) {
+      violations.push({
+        type: 'strict-typography-mismatch',
+        severity: 'error',
+        element: `Text in "${nodeName}"`,
+        current: `${currentFont.fontSize}px / ${currentFont.fontWeight}`,
+        message: `Typography config (size: ${currentFont.fontSize}, weight: ${currentFont.fontWeight}) matches no Carbon token.`,
+        carbonToken: 'Unknown'
+      });
+    }
+  }
+
+  // Recurse
+  node.children?.forEach(child => validateDesignAgainstTokens(child, violations));
+
+  return violations;
 }
 
 /**
@@ -256,7 +429,22 @@ async function analyzeFigmaFrame(figmaUrl) {
     }
 
     // Analyze with Claude
-    const analysis = await analyzeFigmaDesign(designData);
+    const aiAnalysis = await analyzeFigmaDesign(designData);
+
+    // STRICT VALIDATION
+    const strictViolations = validateDesignAgainstTokens(designData);
+
+    // Merge strict violations into the response
+    const combinedViolations = [
+      ...strictViolations,
+      ...(aiAnalysis.violations || [])
+    ];
+
+    // Update summary and score based on strict analysis
+    const strictScore = Math.max(0, 100 - (strictViolations.length * 5));
+    const finalScore = Math.min(aiAnalysis.complianceScore || 100, strictScore);
+    const finalSummary = `Strict Analysis found ${strictViolations.length} deterministic violations. \nAI Summary: ${aiAnalysis.summary}`;
+
 
     return {
       success: true,
@@ -266,7 +454,10 @@ async function analyzeFigmaFrame(figmaUrl) {
       frameName: targetNode.document.name,
       imageUrl,
       designData,
-      ...analysis
+      ...aiAnalysis,
+      violations: combinedViolations,
+      complianceScore: finalScore,
+      summary: finalSummary
     };
   } catch (error) {
     console.error('Failed to analyze Figma frame:', error);

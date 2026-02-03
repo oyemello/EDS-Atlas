@@ -53,6 +53,13 @@ components:
           type: string
         message:
           type: string
+        severity:
+          type: string
+          enum: [error, warning, info]
+          description: "Severity of the violation (error = strict token mismatch)"
+        carbonToken:
+          type: string
+          description: "The Carbon token that should be used (if known)"
 security:
   - ApiKeyAuth: []
 paths:
