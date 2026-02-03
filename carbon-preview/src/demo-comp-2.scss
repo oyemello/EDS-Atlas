@@ -1,0 +1,21 @@
+@use '@carbon/react/scss/spacing' as *;
+@use '@carbon/react/scss/theme' as *;
+
+.demo-comp-2 {
+    background: $layer-background-01;
+    width: 312px;
+
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-04;
+}
+
+.demo-comp-2__progress,
+.demo-comp-2__calendar,
+.demo-comp-2__action {
+    padding: $spacing-04;
+}
+
+.demo-comp-2__calendar {
+    background: $layer-01;
+}
