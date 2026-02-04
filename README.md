@@ -1,4 +1,5 @@
-![EDS Atlas Hero](./assets/heroImage.jpg)
+![heroImage](https://github.com/user-attachments/assets/7847e5bc-4521-49ad-afa9-cbbbe3038b22)
+
 
 # EDS Atlas - AI-Powered Design System Code Inspector
 
