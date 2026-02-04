@@ -1,0 +1,55 @@
+EDS Atlas: System Architecture & Workflows
+This document outlines how the EDS Atlas system works, both as a standalone application and when connected to ChatGPT.
+
+1. The Core "Brain" (Backend)
+At the center of everything is your Node.js/Express Backend (running on Render). This is the shared engine that powers both experiences.
+
+Key Responsibilities:
+Figma Integration: Fetches raw design data from Figma using the Figma API.
+Strict Validation: Deterministically checks every pixel against the IBM Carbon Design System tokens (colors, spacing, typography).
+AI Intelligence: Uses OpenAI (GPT-4/5) to understand context, generate code, and summarize findings.
+Prompt Engine: Loads tuned instructions from backend/prompts/*.txt to ensure consistent AI behavior.
+Workflow A: Standalone Web Application
+This is the "Pro" experience, typically used by developers or designers who want a visual dashboard.
+
+User Action: You open the Next.js Frontend and paste a Figma URL.
+Request: The frontend sends a request to the backend (POST /api/figma/analyze).
+Processing:
+Step 1 (Fetch): Backend downloads the Figma node data.
+Step 2 (Strict Check): The 
+figma-service.js
+ runs a math-based check. Is this hex code #121212 a valid Carbon token? No? Flag it.
+Step 3 (AI Analysis): The 
+openai-service.js
+ asks the LLM to look for logical issues (e.g., "This looks like a button but isn't using the Button component").
+Step 4 (Database): Results are saved to SQLite for history/tracking.
+Display: The Backend sends a rich JSON response back. The Frontend renders this as:
+A Compliance Score (e.g., 85/100).
+A visual list of Violations.
+A "Fix It" button (which calls the Code Generator).
+Workflow B: Custom GPT (ChatGPT Connected)
+This is the "Conversational" experience, used for quick checks or asking questions in natural language.
+
+User Action: You chat with the Custom GPT: "Check this design for me: [Figma URL]".
+Action Trigger: The GPT reads your OpenAPI Specification (
+openapi.yaml
+). It sees it has a tool called 
+analyzeFigma
+.
+Request: The GPT makes an API call to your same Backend (https://your-render-app.com/api/figma/analyze).
+Processing: The Backend performs the exact same steps as above (Fetch -> Strict Check -> AI Analysis).
+Note: Because it's the same backend, strict validation rules apply here too.
+Response: The Backend returns the raw JSON data (violations list) to the GPT (invisible to you).
+Interpretation: The GPT reads the JSON and responds to you in plain English:
+"I found 11 violations. The primary button is using a hardcoded Blue (#0000FF) instead of interactive-01."
+Key Differences
+Feature	Standalone App	Custom GPT
+Interface	Visual Dashboard (Next.js)	Chat Interface (ChatGPT)
+Control	Full control over UI/UX	Limited by Chat UI
+Data View	Clickable, sortable lists	Conversational summary
+Code Preview	Live rendering via carbon-preview	Text blocks / Code snippets
+The carbon-preview Component
+You also have a Vite React App called carbon-preview.
+
+Purpose: A sandbox to verify generated code.
+Flow: When the AI generates code, you can paste it here to see if it actually renders correctly and looks like the Figma design. It's configured with the full Carbon CSS environment to ensure accuracy.

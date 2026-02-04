@@ -1,3 +1,5 @@
+![EDS Atlas Hero](./assets/heroImage.jpg)
+
 # EDS Atlas - AI-Powered Design System Code Inspector
 
 <p align="center">
